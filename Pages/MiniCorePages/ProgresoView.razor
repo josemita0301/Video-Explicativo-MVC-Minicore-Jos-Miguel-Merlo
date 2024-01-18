@@ -22,7 +22,7 @@
         <input class="form-control" @bind="ProgresoForCreate.FechaFin" placeholder="Fecha Fin">
 
         <label>Cantidad Notas</label>
-        <input class="form-control" @bind="ProgresoForCreate.FechaFin" placeholder="Cantidad de Notas">
+        <input class="form-control" @bind="ProgresoForCreate.CantidadNotas" placeholder="Cantidad de Notas">
 
         <button class="btn btn-create" @onclick="(() => CreateProgreso())">Crear</button>
         <button class="btn btn-cancel" @onclick="(() => BtnCancel())">Cancelar</button>
@@ -42,7 +42,7 @@ else if (forEdit)
         <input class="form-control" @bind="ProgresoForEdit.FechaFin" placeholder="Fecha Fin">
 
         <label>Cantidad Notas</label>
-        <input class="form-control" @bind="ProgresoForEdit.FechaFin" placeholder="Cantidad de Notas">
+        <input class="form-control" @bind="ProgresoForEdit.CantidadNotas" placeholder="Cantidad de Notas">
 
         <br>
         <button class="create-button" @onclick="(() => EditProgreso())">Editar</button>
