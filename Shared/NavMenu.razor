@@ -1,0 +1,52 @@
+﻿@using Video_Explicativo_MVC__Minicore__José_Miguel_Merlo.Helpers
+
+<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">Minicore José Miguel Merlo</a>
+        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
+</div>
+
+<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
+    <nav class="flex-column">
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="oi oi-home" aria-hidden="true"></span> Home
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="@URLHelper.GoToAlumnoCRUD()">
+                <span class="oi oi-plus" aria-hidden="true"></span> Alumno CRUD
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="@URLHelper.GoToAlumnoCalificacionCRUD()">
+                <span class="oi oi-plus" aria-hidden="true"></span> Calificaciones CRUD
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="@URLHelper.GoToProgresoCRUD()">
+                <span class="oi oi-plus" aria-hidden="true"></span> Progresos CRUD
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="@URLHelper.GoToCore()">
+                <span class="oi oi-list" aria-hidden="true"></span> Reporte
+            </NavLink>
+        </div>
+    </nav>
+</div>
+
+@code {
+    private bool collapseNavMenu = true;
+
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+}

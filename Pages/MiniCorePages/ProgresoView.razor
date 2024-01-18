@@ -1,0 +1,183 @@
+﻿@page "/ProgresoOperations"
+@using Video_Explicativo_MVC__Minicore__José_Miguel_Merlo.Controllers
+@using Video_Explicativo_MVC__Minicore__José_Miguel_Merlo.Models
+@inject IToastService ToastService;
+
+<h2>Progresos</h2>
+
+<hr>
+@if (forCreate)
+{
+    <div class="form-group">
+        <label>Nombre del Progreso</label>
+        <input class="form-control" @bind="ProgresoForCreate.NombreProgreso" placeholder="Nombre del Progreso">
+
+        <label>Número del Progreso</label>
+        <input class="form-control" @bind="ProgresoForCreate.NumeroProgreso" placeholder="Número del Progreso">
+
+        <label>Fecha Inicio</label>
+        <input class="form-control" @bind="ProgresoForCreate.FechaInicio" placeholder="Fecha Inicio">
+
+        <label>Fecha Fin</label>
+        <input class="form-control" @bind="ProgresoForCreate.FechaFin" placeholder="Fecha Fin">
+
+        <label>Cantidad Notas</label>
+        <input class="form-control" @bind="ProgresoForCreate.FechaFin" placeholder="Cantidad de Notas">
+
+        <button class="btn btn-create" @onclick="(() => CreateProgreso())">Crear</button>
+        <button class="btn btn-cancel" @onclick="(() => BtnCancel())">Cancelar</button>
+    </div>
+
+}
+else if (forEdit)
+{
+    <div class="form-group">
+        <label>Nombre del Progreso</label>
+        <input class="form-control" @bind="ProgresoForEdit.NombreProgreso" placeholder="Nombre del Progreso" disabled="true">
+
+        <label>Fecha Inicio</label>
+        <input class="form-control" @bind="ProgresoForEdit.FechaInicio" placeholder="Fecha Inicio" >
+
+        <label>Fecha Fin</label>
+        <input class="form-control" @bind="ProgresoForEdit.FechaFin" placeholder="Fecha Fin">
+
+        <label>Cantidad Notas</label>
+        <input class="form-control" @bind="ProgresoForEdit.FechaFin" placeholder="Cantidad de Notas">
+
+        <br>
+        <button class="create-button" @onclick="(() => EditProgreso())">Editar</button>
+        <br>
+        <button class="delete-button" @onclick="(() => BtnCancel())">Cancelar</button>
+    </div>
+}
+else
+{
+    <button class="create-button" @onclick="(() => BtnCreate())">Crear nuevo progreso</button>
+}
+
+<br>
+<br>
+
+<table class="generic-table">
+    <thead>
+        <tr>
+            <th>Código</th>
+            <th>Nombre Progreso</th>
+            <th>N° (Progreso)</th>
+            <th>Fecha de Inicio</th>
+            <th>Fecha de Fin</th>
+            <th>Cantidad Notas</th>
+            <th>Porcentaje % total</th>
+            <th>Editar</th>
+
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var progreso in progresos)
+        {
+            <tr>
+                <td>@progreso.ProgresoId</td>
+                <td>@progreso.NombreProgreso</td>
+                <td>@progreso.NumeroProgreso</td>
+                <td>@progreso.FechaInicio</td>
+                <td>@progreso.FechaFin</td>
+                <td>@progreso.CantidadNotas</td>
+                <td>@progreso.Porcentaje</td>
+                <td>
+                    <button class="edit-button" @onclick="(() => BtnEdit(progreso))">Editar</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    public bool forCreate { get; set; }
+    public bool forEdit { get; set; }
+
+    public bool isAuthorized { get; set; }
+
+
+    public Progreso ProgresoForCreate { get; set; }
+    public Progreso ProgresoForEdit { get; set; }
+    public List<Progreso> progresos = new List<Progreso>();
+    public ProgresoController ProgresoController = new ProgresoController();
+
+    protected override async Task OnInitializedAsync()
+    {
+        progresos = await ProgresoController.GetAllProgresos();
+        progresos = progresos.OrderBy(p => p.NumeroProgreso).ToList();
+    }
+
+    private async Task BtnCreate()
+    {
+        if (progresos.Count == 3)
+        {
+            ToastService.ShowWarning("Solo pueden existir 3 progresos");
+            return;
+        }
+
+        forEdit = false;
+        forCreate = true;
+        ProgresoForCreate = new Progreso();
+    }
+
+    private async Task BtnCancel()
+    {
+        forCreate = false;
+        forEdit = false;
+    }
+
+    private async Task CreateProgreso()
+    {
+        if (await ProgresoController.CreateProgreso(ProgresoForCreate))
+        {
+            ToastService.ShowSuccess("Se ha creado el progreso");
+            forCreate = false;
+            forEdit = false;
+            progresos = await ProgresoController.GetAllProgresos();
+            progresos = progresos.OrderBy(p => p.NumeroProgreso).ToList();
+        }
+        else
+        {
+            ToastService.ShowWarning("No se ha podido crear el progreso");
+        }
+    }
+
+    private async Task BtnEdit(Progreso progreso)
+    {
+        forCreate = false;
+        forEdit = true;
+        ProgresoForEdit = progreso;
+    }
+
+    private async Task EditProgreso()
+    {
+
+        if (await ProgresoController.EditProgreso(ProgresoForEdit))
+        {
+            progresos = await ProgresoController.GetAllProgresos();
+            progresos = progresos.OrderBy(p => p.NumeroProgreso).ToList();
+            ToastService.ShowSuccess("Se ha actualizado el progreso");
+        }
+        else
+        {
+            ToastService.ShowWarning("No se ha podido actualizar el progreso");
+        }
+        forEdit = false;
+    }
+
+    private async Task DeleteProgreso(Progreso progreso)
+    {
+        if (await ProgresoController.DeleteProgreso(progreso.ProgresoId))
+        {
+            progresos = await ProgresoController.GetAllProgresos();
+            progresos = progresos.OrderBy(p => p.NumeroProgreso).ToList();
+            ToastService.ShowSuccess("Se ha borrado el progreso");
+        }
+        else
+        {
+            ToastService.ShowWarning("No se ha podido borrar el progreso");
+        }
+    }
+}

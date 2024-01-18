@@ -1,0 +1,75 @@
+﻿@page "/ReporteFinal"
+@using Video_Explicativo_MVC__Minicore__José_Miguel_Merlo.Controllers
+@using Video_Explicativo_MVC__Minicore__José_Miguel_Merlo.Models
+
+<h3>Reporte de calificaciones</h3>
+
+<table class="generic-table">
+    <thead>
+        <tr>
+            <th>Nombre del Alumno</th>
+            <th>Progreso N° 1</th>
+            <th>Progreso N° 2</th>
+            <th>Progreso N° 3</th>
+            <th>Puntos necesarios para P3</th>
+
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var alumnCalif in alumnCalifs)
+        {
+            <tr>
+                <td>@alumnCalif.alumn.Nombre</td>
+                <td>@alumnCalif.GetP1Average(P1.CantidadNotas, P1.Porcentaje)</td>
+                <td>@alumnCalif.GetP2Average(P2.CantidadNotas, P2.Porcentaje)</td>
+                <td>@alumnCalif.GetP3Average(P3.CantidadNotas, P3.Porcentaje)</td>
+                @if (alumnCalif.GetP3Average(P3.CantidadNotas, P3.Porcentaje) == 0)
+                {
+                    if (((6.0) - (alumnCalif.GetP1Average(P1.CantidadNotas, P1.Porcentaje)) - (alumnCalif.GetP2Average(P2.CantidadNotas, P2.Porcentaje)) - (alumnCalif.GetP3Average(P3.CantidadNotas, P3.Porcentaje))) >= 0)
+                    {
+                        <td>
+                            @((6.0) - (alumnCalif.GetP1Average(P1.CantidadNotas, P1.Porcentaje)) - (alumnCalif.GetP2Average(P2.CantidadNotas, P2.Porcentaje)))
+                        </td>
+                    }
+                    else
+                    {
+                        <td>
+                            Aprobada la materia
+                        </td>
+                    }
+
+                }
+                else
+                {
+                    <td>
+                        0.00
+                    </td>
+                }
+
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    public List<AlumnCalificationReport> alumnCalifs = new List<AlumnCalificationReport>();
+    public ProgresoController ProgresoController = new ProgresoController();
+
+    public List<Progreso> Progresos = new List<Progreso>();
+    public Progreso P1 = new Progreso();
+    public Progreso P2 = new Progreso();
+    public Progreso P3 = new Progreso();
+
+    protected override async Task OnInitializedAsync()
+    {
+        alumnCalifs = await CoreController.BuildReporteAlumnosCalifición();
+        alumnCalifs = alumnCalifs.OrderBy(ac => ac.alumn.Nombre).ToList();
+
+        Progresos = await ProgresoController.GetAllProgresos();
+        Progresos = Progresos.OrderBy(p => p.NumeroProgreso).ToList();
+
+        P1 = Progresos[0];
+        P2 = Progresos[1];
+        P3 = Progresos[2];
+    }
+}

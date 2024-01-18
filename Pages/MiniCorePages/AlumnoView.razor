@@ -1,0 +1,160 @@
+﻿@page "/AlumnoOperations"
+@using Video_Explicativo_MVC__Minicore__José_Miguel_Merlo.Controllers
+@using Video_Explicativo_MVC__Minicore__José_Miguel_Merlo.Models
+@inject IToastService ToastService;
+
+<h2>Alumnos</h2>
+<hr>
+<div class="search-container">
+    <input class="search-input" @bind="SearchInput" placeholder="Nombre del Alumno">
+    <button class="search-button" @onclick="(() => Search())">Buscar</button>
+</div>
+<hr>
+@if (forCreate)
+{
+    <div class="form-group">
+        <label>Nombre del Alumno</label>
+        <input class="form-control" @bind="AlumnoForCreate.Nombre" placeholder="Nombre del Alumno">
+        <button class="btn btn-create" @onclick="(() => CreateAlumno())">Crear</button>
+        <button class="btn btn-cancel" @onclick="(() => BtnCancel())">Cancelar</button>
+    </div>
+
+}
+else if (forEdit)
+{
+    <div class="form-group">
+        <label>Nuevo nombre para el Alumno</label>
+        <input @bind="AlumnoForEdit.Nombre" placeholder="Nombre del Alumno">
+        <br>
+        <button class="create-button" @onclick="(() => EditAlumno())">Editar</button>
+        <br>
+        <button class="delete-button" @onclick="(() => BtnCancel())">Cancelar</button>
+    </div>
+}
+else
+{
+    <button class="create-button" @onclick="(() => BtnCreate())">Crear nuevo alumno</button>
+}
+
+<br>
+<br>
+
+<table class="generic-table">
+    <thead>
+        <tr>
+            <th>Código</th>
+            <th>Nombre Del Alumno</th>
+            <th>Editar</th>
+            <th>Borrar</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var alumno in alumnos)
+        {
+            <tr>
+                <td>@alumno.AlumnoId</td>
+                <td>@alumno.Nombre</td>
+                <td>
+                    <button class="edit-button" @onclick="(() => BtnEdit(alumno))">Editar</button>
+                </td>
+                <td>
+                    <button class="delete-button" @onclick="(() => DeleteAlumno(alumno))">Borrar</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    public bool forCreate { get; set; }
+    public bool forEdit { get; set; }
+
+    public bool isAuthorized { get; set; }
+
+    public string SearchInput { get; set; }
+
+    public Alumno AlumnoForCreate { get; set; }
+    public Alumno AlumnoForEdit { get; set; }
+    public List<Alumno> alumnos = new List<Alumno>();
+    public AlumnoController AlumnoController = new AlumnoController();
+
+    protected override async Task OnInitializedAsync()
+    {
+        alumnos = await AlumnoController.GetAllAlumnos();
+    }
+
+    private async Task Search()
+    {
+        if (string.IsNullOrEmpty(SearchInput))
+        {
+            alumnos = await AlumnoController.GetAllAlumnos();
+        }
+        else
+        {
+            alumnos = alumnos.Where(a => a.Nombre.ToLower() == SearchInput.ToLower()).ToList();
+        }
+    }
+
+    private async Task BtnCreate()
+    {
+        forEdit = false;
+        forCreate = true;
+        AlumnoForCreate = new Alumno();
+    }
+
+    private async Task BtnCancel()
+    {
+        forCreate = false;
+        forEdit = false;
+    }
+
+    private async Task CreateAlumno()
+    {
+        if (await AlumnoController.CreateAlumno(AlumnoForCreate))
+        {
+            ToastService.ShowSuccess("Se ha creado el alumno");
+            forCreate = false;
+            forEdit = false;
+            alumnos = await AlumnoController.GetAllAlumnos();
+        }
+        else
+        {
+            ToastService.ShowWarning("No se ha podido crear el alumno");
+        }
+    }
+
+    private async Task BtnEdit(Alumno alumno)
+    {
+        forCreate = false;
+        forEdit = true;
+        AlumnoForEdit = alumno;
+    }
+
+    private async Task EditAlumno()
+    {
+
+        if (await AlumnoController.EditAlumno(AlumnoForEdit))
+        {
+            alumnos = await AlumnoController.GetAllAlumnos();
+            ToastService.ShowSuccess("Se ha actualizado al alumno");
+        }
+        else
+        {
+            ToastService.ShowWarning("No se ha podido actualizar el alumno");
+        }
+        forEdit = false;
+    }
+
+    private async Task DeleteAlumno(Alumno alumno)
+    {
+        if (await AlumnoController.DeleteAlumno(alumno.AlumnoId))
+        {
+            alumnos = await AlumnoController.GetAllAlumnos();
+            ToastService.ShowSuccess("Se ha borrado el alumno");
+        }
+        else
+        {
+            ToastService.ShowWarning("No se ha podido borrar el alumno");
+        }
+    }
+}

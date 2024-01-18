@@ -1,0 +1,192 @@
+﻿@page "/AlumnoCalificacionOperations"
+@using Video_Explicativo_MVC__Minicore__José_Miguel_Merlo.Controllers
+@using Video_Explicativo_MVC__Minicore__José_Miguel_Merlo.Models
+@inject IToastService ToastService;
+
+<h2>Calificaciones de alumnos</h2>
+<hr>
+<div class="search-container">
+    <select @onchange="OnChangeAlumnChanged">
+        <option value="0">Seleccionar un alumno</option>
+        @foreach (var alumno in alumnos)
+        {
+            <option value="@alumno.AlumnoId">@alumno.Nombre</option>
+        }
+    </select>
+</div>
+<hr>
+@if (showForm)
+{
+
+    @if (forCreate)
+    {
+        <div class="form-group">
+            <label>Calificación</label>
+            <input class="form-control" @bind="AlumnoCalificacionesForCreate.Calificacion" placeholder="Calificación">
+
+            <label>Fecha</label>
+            <input class="form-control" @bind="AlumnoCalificacionesForCreate.Fecha" placeholder="Fecha">
+
+            <button class="btn btn-create" @onclick="(() => CreateAlumnoCalificaciones())">Crear</button>
+            <button class="btn btn-cancel" @onclick="(() => BtnCancel())">Cancelar</button>
+        </div>
+    }
+    else if (forEdit)
+    {
+        <div class="form-group">
+            <label>Calificación</label>
+            <input class="form-control" @bind="AlumnoCalificacionesForEdit.Calificacion" placeholder="Calificación">
+
+            <label>Fecha</label>
+            <input class="form-control" @bind="AlumnoCalificacionesForEdit.Fecha" placeholder="Fecha">
+            <br>
+            <button class="create-button" @onclick="(() => EditAlumnoCalificcion())">Editar</button>
+            <br>
+            <button class="delete-button" @onclick="(() => BtnCancel())">Cancelar</button>
+        </div>
+    }
+    else
+    {
+        <button class="create-button" @onclick="(() => BtnCreate())">Crear nueva calificación</button>
+    }
+
+    <br>
+    <br>
+
+    <table class="generic-table">
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>Calificación</th>
+                <th>Fecha</th>
+                <th>Editar</th>
+                <th>Borrar</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var alumnoCalificacion in alumnoCalificaciones)
+            {
+                <tr>
+                    <td>@alumnoCalificacion.AlumnoCalificacionId</td>
+                    <td>@alumnoCalificacion.Calificacion</td>
+                    <td>@alumnoCalificacion.Fecha</td>
+                    <td>
+                        <button class="edit-button" @onclick="(() => BtnEdit(alumnoCalificacion))">Editar</button>
+                    </td>
+                    <td>
+                        <button class="delete-button" @onclick="(() => DeleteAlumnoCalificacion(alumnoCalificacion))">Borrar</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    public bool showForm { set; get; }
+
+    public bool forCreate { get; set; }
+    public bool forEdit { get; set; }
+
+    public bool isAuthorized { get; set; }
+
+    public string SearchInput { get; set; }
+
+    private string selectedValue;
+
+    public AlumnoCalificaciones AlumnoCalificacionesForCreate { get; set; }
+    public AlumnoCalificaciones AlumnoCalificacionesForEdit { get; set; }
+    public List<AlumnoCalificaciones> alumnoCalificaciones = new List<AlumnoCalificaciones>();
+    public List<Alumno> alumnos = new List<Alumno>();
+    public AlumnoCalificacionController AlumnoCalificacionController = new AlumnoCalificacionController();
+    public AlumnoController AlumnoController = new AlumnoController();
+
+    protected override async Task OnInitializedAsync()
+    {
+        alumnos = await AlumnoController.GetAllAlumnos();
+    }
+
+    private async Task OnChangeAlumnChanged(ChangeEventArgs e)
+    {
+        selectedValue = e.Value.ToString();
+
+        if (selectedValue.Equals("0"))
+        {
+            showForm = false;
+        }
+        else
+        {
+            showForm = true;
+            alumnoCalificaciones = await AlumnoCalificacionController.GetAllAlumnosCalificacion();
+            alumnoCalificaciones = alumnoCalificaciones.Where(ac => ac.AlumnoId == selectedValue).ToList();
+        }
+    }
+
+    private async Task BtnCreate()
+    {
+        forEdit = false;
+        forCreate = true;
+        AlumnoCalificacionesForCreate = new AlumnoCalificaciones();
+    }
+
+    private async Task BtnCancel()
+    {
+        forCreate = false;
+        forEdit = false;
+    }
+
+    private async Task CreateAlumnoCalificaciones()
+    {
+        AlumnoCalificacionesForCreate.AlumnoId = selectedValue;
+
+        if (await AlumnoCalificacionController.CreateAlumnoCalificacion(AlumnoCalificacionesForCreate))
+        {
+            ToastService.ShowSuccess("Se ha creado la calificación");
+            forCreate = false;
+            forEdit = false;
+            alumnoCalificaciones = await AlumnoCalificacionController.GetAllAlumnosCalificacion();
+            alumnoCalificaciones = alumnoCalificaciones.Where(ac => ac.AlumnoId == selectedValue).ToList();
+        }
+        else
+        {
+            ToastService.ShowWarning("No se ha podido crear la calificación del alumno");
+        }
+    }
+
+    private async Task BtnEdit(AlumnoCalificaciones alumnoCalif)
+    {
+        forCreate = false;
+        forEdit = true;
+        AlumnoCalificacionesForEdit = alumnoCalif;
+    }
+
+    private async Task EditAlumnoCalificcion()
+    {
+
+        if (await AlumnoCalificacionController.EditAlumnoCalificacion(AlumnoCalificacionesForEdit))
+        {
+            alumnoCalificaciones = await AlumnoCalificacionController.GetAllAlumnosCalificacion();
+            alumnoCalificaciones = alumnoCalificaciones.Where(ac => ac.AlumnoId == selectedValue).ToList();
+            ToastService.ShowSuccess("Se ha actualizado la calificación");
+        }
+        else
+        {
+            ToastService.ShowWarning("No se ha podido actualizar la calificación");
+        }
+        forEdit = false;
+    }
+
+    private async Task DeleteAlumnoCalificacion(AlumnoCalificaciones alumnoCalificacion)
+    {
+        if (await AlumnoCalificacionController.DeleteAlumnoCalif(alumnoCalificacion.AlumnoCalificacionId))
+        {
+            alumnoCalificaciones = await AlumnoCalificacionController.GetAllAlumnosCalificacion();
+            ToastService.ShowSuccess("Se ha borrado la calificación del alumno");
+        }
+        else
+        {
+            ToastService.ShowWarning("No se ha podido borrar la calificación del alumno");
+        }
+    }
+}
+
